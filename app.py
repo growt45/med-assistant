@@ -48,61 +48,218 @@ def inject_css() -> None:
         """
         <style>
         :root {
-            --primary: #1d6fd8;
-            --primary-soft: #edf5ff;
-            --accent: #0e4f9c;
-            --bg: #f4f8fc;
-            --card: rgba(255,255,255,0.92);
-            --text: #18324a;
-            --muted: #6f859b;
-            --border: rgba(29,111,216,0.12);
-            --success: #1f9d69;
-            --warn: #e6a700;
-            --danger: #d84f61;
+            --primary: #ffd100;
+            --primary-strong: #ffbf00;
+            --primary-soft: #fff6cc;
+            --accent: #111111;
+            --bg: #f5f5f5;
+            --card: rgba(255,255,255,0.98);
+            --text: #222222;
+            --muted: #6b6b6b;
+            --border: rgba(17,17,17,0.08);
+            --success: #18a058;
+            --warn: #ff9f1a;
+            --danger: #e5484d;
+            --shadow: 0 16px 36px rgba(17, 17, 17, 0.08);
         }
         .stApp {
             background:
-                radial-gradient(circle at top left, rgba(94,164,255,0.18), transparent 25%),
-                linear-gradient(180deg, #f8fbff 0%, var(--bg) 48%, #eef5fb 100%);
+                radial-gradient(circle at top left, rgba(255, 209, 0, 0.24), transparent 20%),
+                linear-gradient(180deg, #fffbea 0%, #f7f7f2 18%, var(--bg) 100%);
             color: var(--text);
         }
-        .block-container { padding-top: 1.2rem; padding-bottom: 2rem; }
+        .block-container { padding-top: 1rem; padding-bottom: 2rem; max-width: 1240px; }
         .hero, .metric-card, .info-card, .suggest-card, .summary-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 1rem 1.1rem;
-            box-shadow: 0 14px 32px rgba(17, 63, 114, 0.06);
+            box-shadow: var(--shadow);
         }
         .hero {
-            padding: 1.4rem 1.6rem;
-            background: linear-gradient(135deg, #e7f1ff 0%, #ffffff 58%, #f0f7ff 100%);
-            margin-bottom: 1rem;
+            padding: 1.6rem;
+            background:
+                radial-gradient(circle at top right, rgba(255,255,255,0.42), transparent 28%),
+                linear-gradient(135deg, #ffe566 0%, #ffd100 52%, #ffc400 100%);
+            margin-bottom: 1.1rem;
+            position: relative;
+            overflow: hidden;
         }
-        .hero h1 { font-size: 2rem; margin: 0; color: var(--accent); }
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -38px;
+            top: -30px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.16);
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(17,17,17,0.86);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 0.9rem;
+        }
+        .hero h1 {
+            font-size: 2.1rem;
+            line-height: 1.1;
+            margin: 0;
+            color: var(--accent);
+            position: relative;
+            z-index: 1;
+        }
         .hero p, .metric-label { color: var(--muted); }
+        .hero p {
+            max-width: 720px;
+            margin: 0.5rem 0 0;
+            color: rgba(17,17,17,0.78);
+            position: relative;
+            z-index: 1;
+        }
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-chip {
+            background: rgba(255,255,255,0.72);
+            color: #2b2b2b;
+            border: 1px solid rgba(17,17,17,0.06);
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.88rem;
+            font-weight: 700;
+            backdrop-filter: blur(6px);
+        }
         .section-title {
             font-size: 1.15rem;
             font-weight: 700;
             color: var(--accent);
-            margin: 0.2rem 0 0.8rem 0;
+            margin: 0.35rem 0 0.8rem 0;
         }
-        .metric-value { color: var(--accent); font-size: 1.6rem; font-weight: 800; margin-top: 0.15rem; }
+        .metric-card {
+            border: 0;
+            position: relative;
+        }
+        .metric-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #ffd100 0%, #ffbe0b 100%);
+        }
+        .metric-value { color: var(--accent); font-size: 1.7rem; font-weight: 800; margin-top: 0.2rem; }
         .pill {
-            display: inline-block; padding: 0.25rem 0.6rem; margin-right: 0.35rem; margin-bottom: 0.4rem;
-            border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 0.82rem; font-weight: 700;
+            display: inline-block; padding: 0.32rem 0.68rem; margin-right: 0.35rem; margin-bottom: 0.4rem;
+            border-radius: 999px; background: var(--primary-soft); color: #5c4500; font-size: 0.82rem; font-weight: 700;
         }
         .warn { color: var(--warn); font-weight: 700; }
         .danger { color: var(--danger); font-weight: 700; }
         .success { color: var(--success); font-weight: 700; }
+        .info-card, .suggest-card, .summary-card {
+            border-color: rgba(17,17,17,0.06);
+        }
+        .info-card strong, .summary-card strong { color: var(--accent); }
+        .suggest-card {
+            background: linear-gradient(135deg, #fffdf3 0%, #ffffff 100%);
+            border-left: 6px solid var(--primary);
+        }
         .summary-row {
             display: flex; justify-content: space-between; gap: 0.8rem; padding: 0.5rem 0;
-            border-bottom: 1px dashed rgba(111,133,155,0.18);
+            border-bottom: 1px dashed rgba(17,17,17,0.1);
         }
         .summary-row:last-child { border-bottom: 0; padding-bottom: 0; }
         div[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
-            border-right: 1px solid rgba(29,111,216,0.08);
+            background: linear-gradient(180deg, #fff9dc 0%, #fffef8 100%);
+            border-right: 1px solid rgba(17,17,17,0.08);
+        }
+        div[data-testid="stSidebar"] .block-container {
+            padding-top: 1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .sidebar-profile {
+            background: linear-gradient(180deg, #ffffff 0%, #fff9e1 100%);
+            border: 1px solid rgba(17,17,17,0.08);
+            border-radius: 22px;
+            padding: 1rem;
+            box-shadow: 0 10px 22px rgba(17,17,17,0.06);
+        }
+        .sidebar-profile .name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 0.25rem;
+        }
+        .sidebar-profile .tag {
+            display: inline-block;
+            margin-top: 0.35rem;
+            padding: 0.28rem 0.62rem;
+            border-radius: 999px;
+            background: #fff3b0;
+            color: #5b4700;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .sidebar-profile .meta {
+            margin-top: 0.7rem;
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.75;
+        }
+        div[data-baseweb="radio"] label,
+        div[role="radiogroup"] label {
+            background: rgba(255,255,255,0.92);
+            border: 1px solid rgba(17,17,17,0.08);
+            border-radius: 16px;
+            margin-bottom: 0.45rem;
+            padding: 0.2rem 0.35rem;
+        }
+        .stButton > button {
+            border-radius: 16px;
+            border: 0;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+            color: #111;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(255, 209, 0, 0.28);
+        }
+        .stButton > button:hover {
+            background: linear-gradient(180deg, #ffdf3b 0%, #ffc400 100%);
+            color: #111;
+        }
+        .stButton > button:disabled {
+            background: #f1f1f1;
+            color: #999;
+            box-shadow: none;
+        }
+        div[data-baseweb="input"] > div,
+        div[data-baseweb="select"] > div,
+        .stDateInput > div > div,
+        .stTextArea textarea {
+            border-radius: 16px !important;
+            border-color: rgba(17,17,17,0.08) !important;
+            background: rgba(255,255,255,0.96) !important;
+        }
+        .stProgress > div > div > div > div {
+            background: linear-gradient(90deg, #ffd100 0%, #ffb703 100%);
+        }
+        @media (max-width: 768px) {
+            .block-container { padding-top: 0.6rem; }
+            .hero { padding: 1.2rem; border-radius: 20px; }
+            .hero h1 { font-size: 1.7rem; }
+            .hero-meta { gap: 0.5rem; }
         }
         </style>
         """,
@@ -252,8 +409,14 @@ def hero() -> None:
     st.markdown(
         f"""
         <div class="hero">
+            <div class="hero-badge">慢病管理专区</div>
             <h1>慢病用药小管家</h1>
-            <p>为 {profile['name']} 提供覆盖处方解析、用药管理、补药提醒与复诊跟进的全流程慢病用药服务。</p>
+            <p>为 {profile['name']} 提供覆盖处方解析、用药管理、补药提醒与复诊跟进的一站式健康服务，信息更清晰，提醒更直接。</p>
+            <div class="hero-meta">
+                <span class="hero-chip">{profile['name']}</span>
+                <span class="hero-chip">{profile['condition']}</span>
+                <span class="hero-chip">下次复诊：{profile['follow_up_date'].isoformat()}</span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -413,12 +576,20 @@ def sidebar_navigation() -> str:
         st.markdown("## 页面导航")
         page = st.radio("前往页面", ["首页总览", "处方上传", "用药方案", "用药打卡", "库存监测", "复诊管理"], label_visibility="collapsed")
         st.markdown("---")
-        st.markdown("### 患者概况")
         profile = st.session_state.patient_profile
-        st.caption(profile["name"])
-        st.caption(profile["condition"])
-        st.caption(f"建档日期：{profile['start_date'].isoformat()}")
-        st.caption(f"下次复诊：{profile['follow_up_date'].isoformat()}")
+        st.markdown(
+            f'''
+            <div class="sidebar-profile">
+                <div class="name">{profile["name"]}</div>
+                <div class="tag">{profile["condition"]}</div>
+                <div class="meta">
+                    建档日期：{profile["start_date"].isoformat()}<br>
+                    下次复诊：{profile["follow_up_date"].isoformat()}
+                </div>
+            </div>
+            ''',
+            unsafe_allow_html=True,
+        )
     return page
 
 
