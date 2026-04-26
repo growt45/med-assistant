@@ -42,6 +42,40 @@ DEFAULT_PARSE_RESULT = [
     },
 ]
 
+SIMULATED_PATIENTS = {
+    "刘芳": {
+        "condition": "2型糖尿病 / 高血压",
+        "start_date": date(2026, 4, 10),
+        "follow_up_date": date(2026, 5, 25),
+        "prescription_text": "二甲双胍 500mg 每日2次，餐后服用；氨氯地平 5mg 每日1次，早晨服用。",
+        "parsed_prescription": [
+            {"name": "二甲双胍", "dosage": "500mg", "frequency": "每日2次，餐后服用", "duration": 30, "times": ["08:00", "20:00"], "inventory": 24, "daily_doses": 2, "follow_up_days": 30},
+            {"name": "氨氯地平", "dosage": "5mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 18, "daily_doses": 1, "follow_up_days": 45},
+        ],
+    },
+    "王建国": {
+        "condition": "高血压 / 高血脂",
+        "start_date": date(2026, 3, 28),
+        "follow_up_date": date(2026, 5, 18),
+        "prescription_text": "缬沙坦 80mg 每日1次，早晨服用；阿托伐他汀 20mg 每日1次，晚间服用。",
+        "parsed_prescription": [
+            {"name": "缬沙坦", "dosage": "80mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 20, "daily_doses": 1, "follow_up_days": 30},
+            {"name": "阿托伐他汀", "dosage": "20mg", "frequency": "每日1次，晚间服用", "duration": 30, "times": ["20:00"], "inventory": 26, "daily_doses": 1, "follow_up_days": 45},
+        ],
+    },
+    "李阿姨": {
+        "condition": "冠心病 / 高血压",
+        "start_date": date(2026, 4, 2),
+        "follow_up_date": date(2026, 5, 12),
+        "prescription_text": "阿司匹林肠溶片 100mg 每日1次，早餐后服用；氨氯地平 5mg 每日1次，早晨服用；单硝酸异山梨酯缓释片 40mg 每日1次。",
+        "parsed_prescription": [
+            {"name": "阿司匹林肠溶片", "dosage": "100mg", "frequency": "每日1次，早餐后服用", "duration": 30, "times": ["08:00"], "inventory": 25, "daily_doses": 1, "follow_up_days": 30},
+            {"name": "氨氯地平", "dosage": "5mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 16, "daily_doses": 1, "follow_up_days": 30},
+            {"name": "单硝酸异山梨酯缓释片", "dosage": "40mg", "frequency": "每日1次，晨起服用", "duration": 30, "times": ["08:00"], "inventory": 22, "daily_doses": 1, "follow_up_days": 40},
+        ],
+    },
+}
+
 
 def inject_css() -> None:
     st.markdown(
@@ -283,6 +317,38 @@ def initialize_state() -> None:
             "follow_up_date": date.today() + timedelta(days=14),
             "start_date": date.today(),
         }
+    if "selected_patient" not in st.session_state:
+        st.session_state.selected_patient = "刘芳"
+    if "current_prescription_text" not in st.session_state:
+        st.session_state.current_prescription_text = ""
+    if "patient_initialized" not in st.session_state:
+        apply_simulated_patient(st.session_state.selected_patient)
+        st.session_state.patient_initialized = True
+
+
+def apply_simulated_patient(patient_name: str) -> None:
+    patient = SIMULATED_PATIENTS[patient_name]
+    st.session_state.selected_patient = patient_name
+    st.session_state.patient_profile = {
+        "name": patient_name,
+        "condition": patient["condition"],
+        "follow_up_date": patient["follow_up_date"],
+        "start_date": patient["start_date"],
+    }
+    st.session_state.current_prescription_text = patient["prescription_text"]
+    st.session_state.parsed_prescription = [dict(item) for item in patient["parsed_prescription"]]
+    st.session_state.medications = [build_medication(item) for item in st.session_state.parsed_prescription]
+    st.session_state.history = []
+    st.session_state.last_parse_message = f"已载入 {patient_name} 的模拟处方，共 {len(st.session_state.parsed_prescription)} 种药品。"
+
+
+def save_patient_profile(name: str, condition: str, start_date: date, follow_up_date: date) -> None:
+    st.session_state.patient_profile = {
+        "name": name.strip() or st.session_state.patient_profile["name"],
+        "condition": condition.strip() or st.session_state.patient_profile["condition"],
+        "start_date": start_date,
+        "follow_up_date": follow_up_date,
+    }
 
 
 def parse_frequency_to_times(frequency: str) -> list[str]:
@@ -317,6 +383,12 @@ def generate_mock_parse(prescription_text: str) -> list[dict]:
         meds.append({"name": "氨氯地平", "dosage": "5mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 18, "daily_doses": 1, "follow_up_days": 45})
     if "atorvastatin" in text or "阿托伐他汀" in text:
         meds.append({"name": "阿托伐他汀", "dosage": "20mg", "frequency": "每日1次，晚间服用", "duration": 30, "times": ["20:00"], "inventory": 30, "daily_doses": 1, "follow_up_days": 60})
+    if "缬沙坦" in text or "valsartan" in text:
+        meds.append({"name": "缬沙坦", "dosage": "80mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 20, "daily_doses": 1, "follow_up_days": 30})
+    if "阿司匹林肠溶片" in text or "aspirin" in text:
+        meds.append({"name": "阿司匹林肠溶片", "dosage": "100mg", "frequency": "每日1次，早餐后服用", "duration": 30, "times": ["08:00"], "inventory": 25, "daily_doses": 1, "follow_up_days": 30})
+    if "单硝酸异山梨酯" in text or "isosorbide" in text:
+        meds.append({"name": "单硝酸异山梨酯缓释片", "dosage": "40mg", "frequency": "每日1次，晨起服用", "duration": 30, "times": ["08:00"], "inventory": 22, "daily_doses": 1, "follow_up_days": 40})
     return meds or DEFAULT_PARSE_RESULT
 
 
@@ -325,8 +397,10 @@ def load_parsed_plan() -> None:
         return
     st.session_state.medications = [build_medication(raw) for raw in st.session_state.parsed_prescription]
     max_follow_up = max(med["follow_up_days"] for med in st.session_state.medications)
-    st.session_state.patient_profile["start_date"] = date.today()
-    st.session_state.patient_profile["follow_up_date"] = date.today() + timedelta(days=max_follow_up)
+    st.session_state.patient_profile["follow_up_date"] = max(
+        st.session_state.patient_profile["follow_up_date"],
+        date.today() + timedelta(days=max_follow_up),
+    )
 
 
 def combine_schedule(medications: list[dict]) -> list[dict]:
@@ -439,6 +513,29 @@ def dashboard_page() -> None:
     with c4:
         follow_up_days = (st.session_state.patient_profile["follow_up_date"] - date.today()).days
         render_metric_card("下次复诊日期", st.session_state.patient_profile["follow_up_date"].isoformat(), f"距今还有 {follow_up_days} 天")
+    goal_col, prescription_col = st.columns([1, 1])
+    with goal_col:
+        st.markdown('<div class="section-title">当前患者管理目标</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="summary-card">'
+            '<div class="summary-row"><span>目标 01</span><strong>按时服药</strong></div>'
+            '<div class="summary-row"><span>目标 02</span><strong>避免重复购药或断药</strong></div>'
+            '<div class="summary-row"><span>目标 03</span><strong>按期复诊续方</strong></div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    with prescription_col:
+        st.markdown('<div class="section-title">当前患者模拟处方</div>', unsafe_allow_html=True)
+        prescription_items = "".join(
+            [
+                f'<div class="summary-row"><span>{med["name"]}</span><strong>{med["dosage"]}</strong></div>'
+                for med in st.session_state.parsed_prescription
+            ]
+        )
+        st.markdown(
+            f'<div class="summary-card">{prescription_items}<div style="margin-top:0.7rem;" class="metric-label">{st.session_state.current_prescription_text}</div></div>',
+            unsafe_allow_html=True,
+        )
     left, right = st.columns([1.3, 1])
     with left:
         st.markdown('<div class="section-title">今日执行进度</div>', unsafe_allow_html=True)
@@ -465,9 +562,10 @@ def prescription_page() -> None:
     col1, col2 = st.columns([1.1, 1])
     with col1:
         uploaded_file = st.file_uploader("上传处方图片", type=["png", "jpg", "jpeg"])
-        prescription_text = st.text_area("或直接粘贴处方内容", placeholder="示例：二甲双胍 500mg 每日2次，连用30天；氨氯地平 5mg 每日1次，晨起服用。", height=180)
+        prescription_text = st.text_area("或直接粘贴处方内容", value=st.session_state.current_prescription_text, placeholder="示例：二甲双胍 500mg 每日2次，连用30天；氨氯地平 5mg 每日1次，晨起服用。", height=180)
         if st.button("模拟 AI 解析", use_container_width=True):
             parsed = generate_mock_parse(prescription_text)
+            st.session_state.current_prescription_text = prescription_text
             st.session_state.parsed_prescription = parsed
             source = uploaded_file.name if uploaded_file else "文本输入"
             st.session_state.last_parse_message = f"AI 已完成 {source} 解析，共识别出 {len(parsed)} 种药品。"
@@ -573,10 +671,12 @@ def follow_up_page() -> None:
 
 def sidebar_navigation() -> str:
     with st.sidebar:
-        st.markdown("## 页面导航")
-        page = st.radio("前往页面", ["首页总览", "处方上传", "用药方案", "用药打卡", "库存监测", "复诊管理"], label_visibility="collapsed")
-        st.markdown("---")
+        st.markdown("## 当前用户 / 患者档案")
         profile = st.session_state.patient_profile
+        selected_patient = st.selectbox("切换模拟患者", options=list(SIMULATED_PATIENTS.keys()), index=list(SIMULATED_PATIENTS.keys()).index(st.session_state.selected_patient))
+        if selected_patient != st.session_state.selected_patient:
+            apply_simulated_patient(selected_patient)
+            profile = st.session_state.patient_profile
         st.markdown(
             f'''
             <div class="sidebar-profile">
@@ -590,6 +690,19 @@ def sidebar_navigation() -> str:
             ''',
             unsafe_allow_html=True,
         )
+        with st.form("patient_profile_form", clear_on_submit=False):
+            st.markdown("### 患者档案设置")
+            edit_name = st.text_input("姓名", value=profile["name"])
+            edit_condition = st.text_input("慢病类型", value=profile["condition"])
+            edit_start_date = st.date_input("建档日期", value=profile["start_date"])
+            edit_follow_up_date = st.date_input("下次复诊日期", value=profile["follow_up_date"])
+            if st.form_submit_button("保存患者档案", use_container_width=True):
+                save_patient_profile(edit_name, edit_condition, edit_start_date, edit_follow_up_date)
+                st.success("患者档案已更新。")
+                profile = st.session_state.patient_profile
+        st.markdown("---")
+        st.markdown("## 页面导航")
+        page = st.radio("前往页面", ["首页总览", "处方上传", "用药方案", "用药打卡", "库存监测", "复诊管理"], label_visibility="collapsed")
     return page
 
 
