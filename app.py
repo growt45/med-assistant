@@ -122,7 +122,7 @@ def initialize_state() -> None:
     if "patient_profile" not in st.session_state:
         st.session_state.patient_profile = {
             "name": "刘芳",
-            "condition": "2型糖尿病合并高血压",
+            "condition": "2型糖尿病 / 高血压",
             "follow_up_date": date.today() + timedelta(days=14),
             "start_date": date.today(),
         }
