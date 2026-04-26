@@ -22,7 +22,8 @@ TIME_SLOTS = {
 DEFAULT_PARSE_RESULT = [
     {
         "name": "二甲双胍",
-        "dosage": "500mg",
+        "strength": "500mg",
+        "dose": "1片",
         "frequency": "每日2次，餐后服用",
         "duration": 30,
         "times": ["08:00", "20:00"],
@@ -32,7 +33,8 @@ DEFAULT_PARSE_RESULT = [
     },
     {
         "name": "氨氯地平",
-        "dosage": "5mg",
+        "strength": "5mg",
+        "dose": "1片",
         "frequency": "每日1次，早晨服用",
         "duration": 30,
         "times": ["08:00"],
@@ -49,8 +51,8 @@ SIMULATED_PATIENTS = {
         "follow_up_date": date(2026, 5, 25),
         "prescription_text": "二甲双胍 500mg 每日2次，餐后服用；氨氯地平 5mg 每日1次，早晨服用。",
         "parsed_prescription": [
-            {"name": "二甲双胍", "dosage": "500mg", "frequency": "每日2次，餐后服用", "duration": 30, "times": ["08:00", "20:00"], "inventory": 24, "daily_doses": 2, "follow_up_days": 30},
-            {"name": "氨氯地平", "dosage": "5mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 18, "daily_doses": 1, "follow_up_days": 45},
+            {"name": "二甲双胍", "strength": "500mg", "dose": "1片", "frequency": "每日2次，餐后服用", "duration": 30, "times": ["08:00", "20:00"], "inventory": 24, "daily_doses": 2, "follow_up_days": 30},
+            {"name": "氨氯地平", "strength": "5mg", "dose": "1片", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 18, "daily_doses": 1, "follow_up_days": 45},
         ],
     },
     "王建国": {
@@ -59,8 +61,8 @@ SIMULATED_PATIENTS = {
         "follow_up_date": date(2026, 5, 18),
         "prescription_text": "缬沙坦 80mg 每日1次，早晨服用；阿托伐他汀 20mg 每日1次，晚间服用。",
         "parsed_prescription": [
-            {"name": "缬沙坦", "dosage": "80mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 20, "daily_doses": 1, "follow_up_days": 30},
-            {"name": "阿托伐他汀", "dosage": "20mg", "frequency": "每日1次，晚间服用", "duration": 30, "times": ["20:00"], "inventory": 26, "daily_doses": 1, "follow_up_days": 45},
+            {"name": "缬沙坦", "strength": "80mg", "dose": "1片", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 20, "daily_doses": 1, "follow_up_days": 30},
+            {"name": "阿托伐他汀", "strength": "20mg", "dose": "1片", "frequency": "每日1次，晚间服用", "duration": 30, "times": ["20:00"], "inventory": 26, "daily_doses": 1, "follow_up_days": 45},
         ],
     },
     "李阿姨": {
@@ -69,9 +71,9 @@ SIMULATED_PATIENTS = {
         "follow_up_date": date(2026, 5, 12),
         "prescription_text": "阿司匹林肠溶片 100mg 每日1次，早餐后服用；氨氯地平 5mg 每日1次，早晨服用；单硝酸异山梨酯缓释片 40mg 每日1次。",
         "parsed_prescription": [
-            {"name": "阿司匹林肠溶片", "dosage": "100mg", "frequency": "每日1次，早餐后服用", "duration": 30, "times": ["08:00"], "inventory": 25, "daily_doses": 1, "follow_up_days": 30},
-            {"name": "氨氯地平", "dosage": "5mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 16, "daily_doses": 1, "follow_up_days": 30},
-            {"name": "单硝酸异山梨酯缓释片", "dosage": "40mg", "frequency": "每日1次，晨起服用", "duration": 30, "times": ["08:00"], "inventory": 22, "daily_doses": 1, "follow_up_days": 40},
+            {"name": "阿司匹林肠溶片", "strength": "100mg", "dose": "1片", "frequency": "每日1次，早餐后服用", "duration": 30, "times": ["08:00"], "inventory": 25, "daily_doses": 1, "follow_up_days": 30},
+            {"name": "氨氯地平", "strength": "5mg", "dose": "1片", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 16, "daily_doses": 1, "follow_up_days": 30},
+            {"name": "单硝酸异山梨酯缓释片", "strength": "40mg", "dose": "1片", "frequency": "每日1次，晨起服用", "duration": 30, "times": ["08:00"], "inventory": 22, "daily_doses": 1, "follow_up_days": 40},
         ],
     },
 }
@@ -351,6 +353,14 @@ def save_patient_profile(name: str, condition: str, start_date: date, follow_up_
     }
 
 
+def format_medication_line(med: dict) -> str:
+    return f'{med["name"]} {med["strength"]} · 每次{med["dose"]}'
+
+
+def format_usage_text(med: dict) -> str:
+    return f'每次{med["dose"]}，{med["frequency"]}'
+
+
 def parse_frequency_to_times(frequency: str) -> list[str]:
     lowered = frequency.lower()
     if "three" in lowered or "tid" in lowered:
@@ -362,9 +372,12 @@ def parse_frequency_to_times(frequency: str) -> list[str]:
 
 def build_medication(raw: dict) -> dict:
     times = raw.get("times") or parse_frequency_to_times(raw.get("frequency", ""))
+    strength = raw.get("strength") or raw.get("dosage", "")
+    dose = raw.get("dose", "1片")
     return {
         "name": raw["name"],
-        "dosage": raw["dosage"],
+        "strength": strength,
+        "dose": dose,
         "frequency": raw["frequency"],
         "duration": int(raw["duration"]),
         "times": times,
@@ -378,17 +391,17 @@ def generate_mock_parse(prescription_text: str) -> list[dict]:
     text = prescription_text.lower()
     meds = []
     if "metformin" in text or "二甲双胍" in text:
-        meds.append({"name": "二甲双胍", "dosage": "500mg", "frequency": "每日2次，餐后服用", "duration": 30, "times": ["08:00", "20:00"], "inventory": 28, "daily_doses": 2, "follow_up_days": 30})
+        meds.append({"name": "二甲双胍", "strength": "500mg", "dose": "1片", "frequency": "每日2次，餐后服用", "duration": 30, "times": ["08:00", "20:00"], "inventory": 28, "daily_doses": 2, "follow_up_days": 30})
     if "amlodipine" in text or "氨氯地平" in text:
-        meds.append({"name": "氨氯地平", "dosage": "5mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 18, "daily_doses": 1, "follow_up_days": 45})
+        meds.append({"name": "氨氯地平", "strength": "5mg", "dose": "1片", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 18, "daily_doses": 1, "follow_up_days": 45})
     if "atorvastatin" in text or "阿托伐他汀" in text:
-        meds.append({"name": "阿托伐他汀", "dosage": "20mg", "frequency": "每日1次，晚间服用", "duration": 30, "times": ["20:00"], "inventory": 30, "daily_doses": 1, "follow_up_days": 60})
+        meds.append({"name": "阿托伐他汀", "strength": "20mg", "dose": "1片", "frequency": "每日1次，晚间服用", "duration": 30, "times": ["20:00"], "inventory": 30, "daily_doses": 1, "follow_up_days": 60})
     if "缬沙坦" in text or "valsartan" in text:
-        meds.append({"name": "缬沙坦", "dosage": "80mg", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 20, "daily_doses": 1, "follow_up_days": 30})
+        meds.append({"name": "缬沙坦", "strength": "80mg", "dose": "1片", "frequency": "每日1次，早晨服用", "duration": 30, "times": ["08:00"], "inventory": 20, "daily_doses": 1, "follow_up_days": 30})
     if "阿司匹林肠溶片" in text or "aspirin" in text:
-        meds.append({"name": "阿司匹林肠溶片", "dosage": "100mg", "frequency": "每日1次，早餐后服用", "duration": 30, "times": ["08:00"], "inventory": 25, "daily_doses": 1, "follow_up_days": 30})
+        meds.append({"name": "阿司匹林肠溶片", "strength": "100mg", "dose": "1片", "frequency": "每日1次，早餐后服用", "duration": 30, "times": ["08:00"], "inventory": 25, "daily_doses": 1, "follow_up_days": 30})
     if "单硝酸异山梨酯" in text or "isosorbide" in text:
-        meds.append({"name": "单硝酸异山梨酯缓释片", "dosage": "40mg", "frequency": "每日1次，晨起服用", "duration": 30, "times": ["08:00"], "inventory": 22, "daily_doses": 1, "follow_up_days": 40})
+        meds.append({"name": "单硝酸异山梨酯缓释片", "strength": "40mg", "dose": "1片", "frequency": "每日1次，晨起服用", "duration": 30, "times": ["08:00"], "inventory": 22, "daily_doses": 1, "follow_up_days": 40})
     return meds or DEFAULT_PARSE_RESULT
 
 
@@ -407,7 +420,7 @@ def combine_schedule(medications: list[dict]) -> list[dict]:
     schedule = []
     for med in medications:
         for med_time in med["times"]:
-            schedule.append({"id": f"{date.today().isoformat()}-{med['name']}-{med_time}", "name": med["name"], "dosage": med["dosage"], "time": med_time})
+            schedule.append({"id": f"{date.today().isoformat()}-{med['name']}-{med_time}", "name": med["name"], "strength": med["strength"], "dose": med["dose"], "time": med_time})
     return sorted(schedule, key=lambda item: item["time"])
 
 
@@ -451,9 +464,9 @@ def find_next_medication() -> str:
     for item in schedule:
         item_time = datetime.strptime(item["time"], "%H:%M").time()
         if item_time >= now_time and not history_matches_today(item["name"], item["time"]):
-            return f"{item['time']} · {item['name']}"
+            return f"{item['time']} · {item['name']} {item['strength']}"
     first = schedule[0] if schedule else None
-    return f"明天 {first['time']} · {first['name']}" if first else "尚未生成方案"
+    return f"明天 {first['time']} · {first['name']} {first['strength']}" if first else "尚未生成方案"
 
 
 def weekly_missed_doses() -> int:
@@ -528,7 +541,7 @@ def dashboard_page() -> None:
         st.markdown('<div class="section-title">当前患者模拟处方</div>', unsafe_allow_html=True)
         prescription_items = "".join(
             [
-                f'<div class="summary-row"><span>{med["name"]}</span><strong>{med["dosage"]}</strong></div>'
+                f'<div class="summary-row"><span>{med["name"]}</span><strong>{med["strength"]} · 每次{med["dose"]}</strong></div>'
                 for med in st.session_state.parsed_prescription
             ]
         )
@@ -546,7 +559,7 @@ def dashboard_page() -> None:
                 taken = history_matches_today(item["name"], item["time"])
                 status_class = "success" if taken else "warn"
                 status_text = "已服用" if taken else "待服用"
-                st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><div style="display:flex;justify-content:space-between;gap:0.8rem;"><div><strong>{item["name"]}</strong> · {item["dosage"]}<br><span class="metric-label">{item["time"]}</span></div><div class="{status_class}">{status_text}</div></div></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><div style="display:flex;justify-content:space-between;gap:0.8rem;"><div><strong>{item["name"]} {item["strength"]}</strong><br><span class="metric-label">每次{item["dose"]} · 计划服用时间：{item["time"]}</span></div><div class="{status_class}">{status_text}</div></div></div>', unsafe_allow_html=True)
         else:
             st.info("请先上传处方并生成用药方案。")
     with right:
@@ -576,7 +589,7 @@ def prescription_page() -> None:
     if st.session_state.parsed_prescription:
         st.markdown('<div class="section-title">解析结果</div>', unsafe_allow_html=True)
         for med in st.session_state.parsed_prescription:
-            st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><strong>{med["name"]}</strong><br><span class="metric-label">剂量：{med["dosage"]} · 频次：{med["frequency"]} · 疗程：{med["duration"]} 天</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><strong>药品：{med["name"]}</strong><br><span class="metric-label">规格：{med["strength"]}</span><br><span class="metric-label">用法：每次{med["dose"]}，{med["frequency"]}</span><br><span class="metric-label">疗程：{med["duration"]}天</span></div>', unsafe_allow_html=True)
         if st.button("生成用药方案", type="primary", use_container_width=True):
             load_parsed_plan()
             st.success("已生成用药方案，请前往“用药方案”页面查看和调整。")
@@ -588,15 +601,17 @@ def plan_page() -> None:
         st.info("尚未生成用药方案，请先前往“处方上传”。")
         return
     for index, med in enumerate(st.session_state.medications):
-        st.markdown(f'<div class="info-card" style="margin-bottom:0.8rem;"><strong>{med["name"]}</strong> · {med["dosage"]}<br><span class="metric-label">可在下方调整剂量、疗程、库存和服药时段。</span></div>', unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
+        st.markdown(f'<div class="info-card" style="margin-bottom:0.8rem;"><strong>{format_medication_line(med)}</strong><br><span class="metric-label">可在下方调整规格、每次服用量、疗程、库存和服药时段。</span></div>', unsafe_allow_html=True)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            med["dosage"] = st.text_input("剂量", med["dosage"], key=f"dosage_{index}")
+            med["strength"] = st.text_input("规格", med["strength"], key=f"strength_{index}")
         with col2:
-            med["duration"] = st.number_input("疗程（天）", min_value=1, value=int(med["duration"]), key=f"duration_{index}")
+            med["dose"] = st.text_input("每次服用量", med["dose"], key=f"dose_{index}")
         with col3:
-            med["inventory"] = st.number_input("当前库存", min_value=0, value=int(med["inventory"]), key=f"inventory_{index}")
+            med["duration"] = st.number_input("疗程（天）", min_value=1, value=int(med["duration"]), key=f"duration_{index}")
         with col4:
+            med["inventory"] = st.number_input("当前库存（片）", min_value=0, value=int(med["inventory"]), key=f"inventory_{index}")
+        with col5:
             selected_slots = st.multiselect("服药时段", options=list(TIME_SLOTS.keys()), default=[slot for slot, meta in TIME_SLOTS.items() if meta["time"] in med["times"]], key=f"times_{index}")
             med["times"] = [TIME_SLOTS[slot]["time"] for slot in selected_slots] or med["times"]
             med["daily_doses"] = max(1, len(med["times"]))
@@ -605,7 +620,7 @@ def plan_page() -> None:
     grouped = {"08:00": [], "13:00": [], "20:00": []}
     for med in st.session_state.medications:
         for med_time in med["times"]:
-            grouped.setdefault(med_time, []).append(f"{med['name']} {med['dosage']}")
+            grouped.setdefault(med_time, []).append(format_medication_line(med))
     for slot_col, slot_time, slot_name in [(morning, "08:00", "早晨"), (noon, "13:00", "中午"), (evening, "20:00", "晚上")]:
         with slot_col:
             meds = grouped.get(slot_time, [])
@@ -625,7 +640,7 @@ def tracker_page() -> None:
         taken = history_matches_today(item["name"], item["time"])
         left, right = st.columns([4, 1])
         with left:
-            st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><strong>{item["name"]}</strong> · {item["dosage"]}<br><span class="metric-label">计划服用时间：{item["time"]}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><strong>{item["name"]} {item["strength"]}</strong><br><span class="metric-label">每次{item["dose"]} · 计划服用时间：{item["time"]}</span></div>', unsafe_allow_html=True)
         with right:
             if st.button("已服用" if taken else "标记已服用", key=f'take_{item["name"]}_{item["time"]}', disabled=taken, use_container_width=True):
                 mark_taken(item["name"], item["time"])
@@ -643,14 +658,14 @@ def inventory_page() -> None:
         status_class = "danger" if remaining_days <= 7 else "success"
         c1, c2 = st.columns([3, 1])
         with c1:
-            st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><strong>{med["name"]}</strong> · {med["dosage"]}<br><span class="metric-label">剩余药量：{med["inventory"]} 片 · 预计还可服用 {remaining_days} 天</span><br><span class="{status_class}">{status}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-card" style="margin-bottom:0.7rem;"><strong>{format_medication_line(med)}</strong><br><span class="metric-label">剩余药量：{med["inventory"]}片</span><br><span class="metric-label">预计还可服用：{remaining_days}天</span><br><span class="{status_class}">{status}</span></div>', unsafe_allow_html=True)
         with c2:
-            refill_amount = st.number_input("补充库存", min_value=0, value=0, key=f"refill_{index}")
+            refill_amount = st.number_input("补充库存（片）", min_value=0, value=0, key=f"refill_{index}")
             if st.button("确认补药", key=f"refill_btn_{index}", use_container_width=True):
                 med["inventory"] += int(refill_amount)
                 st.rerun()
     if total_remaining_days() <= 7:
-        st.warning("补药提醒：当前至少有一种药品剩余不足 7 天，请尽快补药。")
+        st.warning("补药提醒：当前药品剩余不足7天，请尽快补药。")
 
 
 def follow_up_page() -> None:
